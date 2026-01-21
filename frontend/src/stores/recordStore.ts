@@ -29,7 +29,7 @@ export const useRecordStore = create<RecordStore>((set) => ({
   fetchRecords: async (params) => {
     set({ loading: true, error: null })
     try {
-      const response = await recordsApi.list(params)
+      const { data: response } = await recordsApi.list(params)
       set({ records: response.records, loading: false })
     } catch (error: any) {
       set({ error: error.message, loading: false })
@@ -42,7 +42,7 @@ export const useRecordStore = create<RecordStore>((set) => ({
     set({ loading: true, error: null })
     try {
       console.log('🚀 调用 API...')
-      const record = await recordsApi.create(data)
+      const { data: record } = await recordsApi.create(data)
       console.log('✅ 记录创建成功:', record)
       set((state) => ({
         records: [record, ...state.records],
@@ -76,7 +76,7 @@ export const useRecordStore = create<RecordStore>((set) => ({
   transcribeAudio: async (file) => {
     set({ loading: true, error: null })
     try {
-      const result = await recordsApi.transcribe(file)
+      const { data: result } = await recordsApi.transcribe(file)
       set({ loading: false })
       return result.text
     } catch (error: any) {
