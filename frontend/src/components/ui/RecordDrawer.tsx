@@ -45,7 +45,8 @@ export default function RecordDrawer() {
 
   const fetchRecords = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/records/history?days=30')
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+      const response = await fetch(`${API_URL}/records/history?days=30`)
       const data = await response.json()
       
       // 确保返回的是数组
