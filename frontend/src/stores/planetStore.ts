@@ -31,7 +31,7 @@ export const usePlanetStore = create<PlanetStore>((set, get) => ({
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/0177d4de-2faa-4d99-960c-3205811fe5c0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'planetStore.ts:31',message:'Fetching planet state',data:{date},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
       // #endregion
-      const { data: state } = await planetApi.getState(date)
+      const state = await planetApi.getState(date) as any
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/0177d4de-2faa-4d99-960c-3205811fe5c0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'planetStore.ts:35',message:'Planet state fetched successfully',data:{state},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
       // #endregion
@@ -50,7 +50,7 @@ export const usePlanetStore = create<PlanetStore>((set, get) => ({
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/0177d4de-2faa-4d99-960c-3205811fe5c0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'planetStore.ts:50',message:'Fetching stats',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
       // #endregion
-      const { data: stats } = await planetApi.getStats()
+      const stats = await planetApi.getStats() as any
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/0177d4de-2faa-4d99-960c-3205811fe5c0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'planetStore.ts:54',message:'Stats fetched successfully',data:{stats},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
       // #endregion

@@ -29,8 +29,8 @@ export const useRecordStore = create<RecordStore>((set) => ({
   fetchRecords: async (params) => {
     set({ loading: true, error: null })
     try {
-      const { data: response } = await recordsApi.list(params)
-      set({ records: response.records, loading: false })
+      const response = await recordsApi.list(params) as any
+      set({ records: response.records || [], loading: false })
     } catch (error: any) {
       set({ error: error.message, loading: false })
     }
