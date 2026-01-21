@@ -14,7 +14,7 @@ interface EmotionAnalysis {
   emotion_scores: Record<string, number>
 }
 
-interface Record {
+interface JournalRecord {
   id: string
   type: RecordType
   content: string
@@ -32,7 +32,7 @@ const typeConfig = {
 
 export default function RecordDrawer() {
   const [isOpen, setIsOpen] = useState(false)
-  const [records, setRecords] = useState<Record[]>([])
+  const [records, setRecords] = useState<JournalRecord[]>([])
   const [selectedType, setSelectedType] = useState<RecordType | 'all'>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
