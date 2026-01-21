@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 import { planetApi, PlanetHistoryItem } from '@/lib/api'
@@ -12,18 +12,18 @@ export default function TimelinePanel() {
   const [days, setDays] = useState(7)
   const { fetchPlanetState } = usePlanetStore()
 
-  useEffect(() => {
-    loadHistory()
-  }, [days])
-
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     try {
-      const data = await planetApi.getHistory(days)
+      const { data } = await planetApi.getHistory(days)
       setHistory(data.history)
     } catch (error) {
       console.error('Failed to load history:', error)
     }
-  }
+  }, [days])
+
+  useEffect(() => {
+    loadHistory()
+  }, [loadHistory])
 
   const handleDateClick = async (date: string) => {
     await fetchPlanetState(date)
