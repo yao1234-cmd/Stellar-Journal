@@ -3,8 +3,8 @@
  */
 import axios from 'axios'
 
-// 临时硬编码 API URL 用于调试
-const API_BASE_URL = 'http://localhost:8000/api/v1'
+// API URL - 从环境变量读取，本地开发时使用 localhost
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
 console.log('🔗 API Base URL:', API_BASE_URL)
 
 const api = axios.create({
