@@ -1,0 +1,4 @@
+# 应用配置
+APP_NAME=Stellar Journal
+DEBUG=True
+ENVIRONMENT=development
