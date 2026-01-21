@@ -18,13 +18,16 @@ depends_on = None
 def upgrade():
     """创建初始用户"""
     # 使用 op.execute 插入初始用户
+    # hashed_password 使用一个无效的占位符（临时用户不需要真实密码）
     op.execute(
         """
-        INSERT INTO users (id, username, email, created_at, updated_at)
+        INSERT INTO users (id, username, email, hashed_password, is_active, created_at, updated_at)
         VALUES (
             '00000000-0000-0000-0000-000000000001'::uuid,
             'temp_user',
             'temp@example.com',
+            'temp_password_hash_placeholder',
+            true,
             NOW(),
             NOW()
         )
