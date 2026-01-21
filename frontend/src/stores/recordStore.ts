@@ -2,18 +2,18 @@
  * Record Store - 记录状态管理
  */
 import { create } from 'zustand'
-import { Record, RecordCreate, recordsApi } from '@/lib/api'
+import { RecordItem, RecordCreate, recordsApi } from '@/lib/api'
 
 interface RecordStore {
   // 状态
-  records: Record[]
-  currentRecord: Record | null
+  records: RecordItem[]
+  currentRecord: RecordItem | null
   loading: boolean
   error: string | null
 
   // 动作
   fetchRecords: (params?: { skip?: number; limit?: number; record_type?: string }) => Promise<void>
-  createRecord: (data: RecordCreate) => Promise<Record | null>
+  createRecord: (data: RecordCreate) => Promise<RecordItem | null>
   deleteRecord: (id: string) => Promise<void>
   transcribeAudio: (file: File) => Promise<string | null>
 }

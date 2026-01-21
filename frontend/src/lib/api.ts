@@ -50,7 +50,7 @@ export interface EmotionData {
   emotion_scores: Record<string, number>
 }
 
-export interface Record {
+export interface RecordItem {
   id: string
   user_id: string
   type: 'mood' | 'spark' | 'thought'
@@ -73,17 +73,17 @@ export interface Record {
 
 export const recordsApi = {
   // 创建记录
-  create: (data: RecordCreate) => api.post<Record>('/records/', data),
+  create: (data: RecordCreate) => api.post<RecordItem>('/records/', data),
 
   // 获取记录列表
   list: (params?: { skip?: number; limit?: number; record_type?: string }) =>
-    api.get<{ records: Record[]; total: number; page: number; page_size: number }>(
+    api.get<{ records: RecordItem[]; total: number; page: number; page_size: number }>(
       '/records/',
       { params }
     ),
 
   // 获取单条记录
-  get: (id: string) => api.get<Record>(`/records/${id}`),
+  get: (id: string) => api.get<RecordItem>(`/records/${id}`),
 
   // 删除记录
   delete: (id: string) => api.delete(`/records/${id}`),
