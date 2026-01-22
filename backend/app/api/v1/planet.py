@@ -7,22 +7,22 @@ from datetime import date, datetime
 from typing import Optional
 
 from app.core.database import get_db
+from app.core.deps import get_current_verified_user
+from app.models.user import User
 from app.schemas.planet import PlanetState, PlanetHistory
 from app.services.planet_service import planet_service
 
 router = APIRouter()
 
-# 临时用户ID
-TEMP_USER_ID = "00000000-0000-0000-0000-000000000001"
-
 
 @router.get("/state", response_model=PlanetState)
 async def get_planet_state(
     target_date: Optional[str] = Query(None, description="目标日期 YYYY-MM-DD"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_verified_user)
 ):
     """
-    获取星球当前状态
+    获取星球当前状态（需要认证且邮箱已验证）
     
     返回指定日期（默认今天）的星球完整状态：
     - 大气层颜色（当日心情）
@@ -45,7 +45,7 @@ async def get_planet_state(
         # 获取星球状态
         state = await planet_service.get_planet_state(
             db=db,
-            user_id=TEMP_USER_ID,
+            user_id=str(current_user.id),
             target_date=parsed_date
         )
         
@@ -63,17 +63,18 @@ async def get_planet_state(
 @router.get("/history", response_model=PlanetHistory)
 async def get_planet_history(
     days: int = Query(30, ge=1, le=365, description="回溯天数"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_verified_user)
 ):
     """
-    获取星球历史
+    获取星球历史（需要认证且邮箱已验证）
     
     返回过去N天的星球颜色变化历史，用于时光轴展示
     """
     try:
         history_data = await planet_service.get_planet_history(
             db=db,
-            user_id=TEMP_USER_ID,
+            user_id=str(current_user.id),
             days=days
         )
         
@@ -98,9 +99,12 @@ async def get_planet_history(
 
 
 @router.get("/stats", response_model=dict)
-async def get_planet_stats(db: Session = Depends(get_db)):
+async def get_planet_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_verified_user)
+):
     """
-    获取星球统计信息
+    获取星球统计信息（需要认证且邮箱已验证）
     
     返回总体统计数据
     """
@@ -110,28 +114,28 @@ async def get_planet_stats(db: Session = Depends(get_db)):
     try:
         # 总记录数
         total_records = db.query(func.count(Record.id)).filter(
-            Record.user_id == TEMP_USER_ID
+            Record.user_id == current_user.id
         ).scalar() or 0
         
         # 各类型记录数
         mood_count = db.query(func.count(Record.id)).filter(
-            Record.user_id == TEMP_USER_ID,
+            Record.user_id == current_user.id,
             Record.type == RecordType.MOOD
         ).scalar() or 0
         
         spark_count = db.query(func.count(Record.id)).filter(
-            Record.user_id == TEMP_USER_ID,
+            Record.user_id == current_user.id,
             Record.type == RecordType.SPARK
         ).scalar() or 0
         
         thought_count = db.query(func.count(Record.id)).filter(
-            Record.user_id == TEMP_USER_ID,
+            Record.user_id == current_user.id,
             Record.type == RecordType.THOUGHT
         ).scalar() or 0
         
         # 第一条记录日期
         first_record = db.query(Record).filter(
-            Record.user_id == TEMP_USER_ID
+            Record.user_id == current_user.id
         ).order_by(Record.created_at).first()
         
         return {

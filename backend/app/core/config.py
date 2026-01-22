@@ -50,9 +50,17 @@ class Settings(BaseSettings):
     ZHIPU_API_KEY: str = ""
     ZHIPU_MODEL_EMOTION: str = "glm-4-flash"  # 或 "glm-4"
     
-    # Security
+    # Security & Authentication
     SECRET_KEY: str = "your-secret-key-here-please-change-in-production"
+    JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080  # 7 days
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+    
+    # Email Service (Resend)
+    RESEND_API_KEY: str = ""
+    EMAIL_FROM: str = "noreply@stellar-journal.app"
+    EMAIL_FROM_NAME: str = "Stellar Journal"
+    FRONTEND_URL: str = "http://localhost:3000"
     
     # File Upload
     MAX_UPLOAD_SIZE: int = 10485760  # 10MB

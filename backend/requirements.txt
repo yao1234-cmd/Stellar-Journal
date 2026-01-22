@@ -27,6 +27,9 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.1.2
 
+# Email
+resend==0.7.0
+
 # Utils
 httpx==0.26.0
 python-dateutil==2.8.2

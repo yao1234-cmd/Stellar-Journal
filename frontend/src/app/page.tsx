@@ -1,12 +1,39 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuthStore } from '@/stores/authStore'
+import { LogOut } from 'lucide-react'
 import PlanetScene from '@/components/planet/PlanetScene'
 import RecordPanel from '@/components/ui/RecordPanel'
 import RecordDrawer from '@/components/ui/RecordDrawer'
 import StatsPanel from '@/components/ui/StatsPanel'
 
 export default function Home() {
+  const router = useRouter()
+  const { isAuthenticated, clearAuth, user } = useAuthStore()
+
+  // 路由保护：未登录跳转到登录页
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/login')
+    }
+  }, [isAuthenticated, router])
+
+  const handleLogout = () => {
+    clearAuth()
+    router.push('/login')
+  }
+
+  // 未认证时显示加载状态
+  if (!isAuthenticated) {
+    return (
+      <div className="w-screen h-screen bg-gradient-to-b from-indigo-950 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    )
+  }
+
   return (
     <main className="relative w-screen h-screen overflow-hidden bg-gradient-to-b from-indigo-950 via-purple-900 to-slate-900">
       {/* 3D 星球场景 */}
@@ -19,14 +46,26 @@ export default function Home() {
       {/* UI 覆层 */}
       <div className="ui-overlay">
         {/* 顶部标题栏 */}
-        <header className="fixed top-0 left-0 right-0 p-6 flex items-center justify-between">
+        <header className="fixed top-0 left-0 right-0 p-6 flex items-center justify-between z-50">
           <div className="glass-effect rounded-2xl px-6 py-3">
             <h1 className="text-2xl font-bold text-white">
               星迹 <span className="text-lg font-normal text-white/70">Stellar Journal</span>
             </h1>
           </div>
           
-          <StatsPanel />
+          <div className="flex items-center gap-4">
+            <div className="glass-effect rounded-2xl px-4 py-2 text-white/90 text-sm">
+              {user?.username}
+            </div>
+            <StatsPanel />
+            <button
+              onClick={handleLogout}
+              className="glass-effect rounded-2xl p-3 text-white/80 hover:text-white hover:bg-white/10 transition-all"
+              title="登出"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
         </header>
 
         {/* 底部记录面板 */}

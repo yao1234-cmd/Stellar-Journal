@@ -15,10 +15,21 @@ const api = axios.create({
   timeout: 30000,
 })
 
-// 请求拦截器
+// 请求拦截器 - 自动注入 token
 api.interceptors.request.use(
   (config) => {
-    // 可以在这里添加 token
+    // 从 localStorage 读取 token（因为 zustand persist）
+    const authStorage = localStorage.getItem('auth-storage')
+    if (authStorage) {
+      try {
+        const { state } = JSON.parse(authStorage)
+        if (state?.accessToken) {
+          config.headers.Authorization = `Bearer ${state.accessToken}`
+        }
+      } catch (e) {
+        console.error('Failed to parse auth storage:', e)
+      }
+    }
     return config
   },
   (error) => {
@@ -26,10 +37,50 @@ api.interceptors.request.use(
   }
 )
 
-// 响应拦截器
+// 响应拦截器 - 处理 401 和自动刷新 token
 api.interceptors.response.use(
   (response) => response.data,
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config
+    
+    // 如果是 401 且未尝试刷新过
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true
+      
+      try {
+        // 尝试刷新 token
+        const authStorage = localStorage.getItem('auth-storage')
+        if (authStorage) {
+          const { state } = JSON.parse(authStorage)
+          if (state?.refreshToken) {
+            const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+              refresh_token: state.refreshToken
+            })
+            
+            // 更新 token
+            const { access_token, refresh_token } = response.data
+            const newState = {
+              ...state,
+              accessToken: access_token,
+              refreshToken: refresh_token,
+            }
+            localStorage.setItem('auth-storage', JSON.stringify({ state: newState }))
+            
+            // 重试原请求
+            originalRequest.headers.Authorization = `Bearer ${access_token}`
+            return api(originalRequest)
+          }
+        }
+      } catch (refreshError) {
+        // 刷新失败，清除认证状态并跳转登录
+        localStorage.removeItem('auth-storage')
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login'
+        }
+        return Promise.reject(refreshError)
+      }
+    }
+    
     console.error('API Error:', error.response?.data || error.message)
     return Promise.reject(error)
   }
@@ -168,6 +219,70 @@ export const planetApi = {
     fetch('http://127.0.0.1:7242/ingest/0177d4de-2faa-4d99-960c-3205811fe5c0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.ts:167',message:'Calling getStats API',data:{url:`${API_BASE_URL}/planet/stats`},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
     // #endregion
     return api.get<PlanetStats>('/planet/stats')
+  },
+}
+
+// ========== 认证相关 API ==========
+
+export interface UserRegister {
+  username: string
+  email: string
+  password: string
+}
+
+export interface UserLogin {
+  email: string
+  password: string
+}
+
+export interface TokenResponse {
+  access_token: string
+  refresh_token: string
+  token_type: string
+}
+
+export interface UserResponse {
+  id: string
+  username: string
+  email: string
+  is_active: boolean
+  is_email_verified: boolean
+  created_at: string
+}
+
+export interface MessageResponse {
+  message: string
+}
+
+export const authApi = {
+  // 注册
+  register: (data: UserRegister) => {
+    return api.post<MessageResponse>('/auth/register', data)
+  },
+
+  // 验证邮箱
+  verifyEmail: (token: string) => {
+    return api.post<MessageResponse>('/auth/verify-email', { token })
+  },
+
+  // 登录
+  login: (data: UserLogin) => {
+    return api.post<TokenResponse>('/auth/login', data)
+  },
+
+  // 刷新 token
+  refreshToken: (refreshToken: string) => {
+    return api.post<TokenResponse>('/auth/refresh', { refresh_token: refreshToken })
+  },
+
+  // 获取当前用户信息
+  getCurrentUser: () => {
+    return api.get<UserResponse>('/auth/me')
+  },
+
+  // 重新发送验证邮件
+  resendVerification: (email: string) => {
+    return api.post<MessageResponse>('/auth/resend-verification', { email })
   },
 }
 

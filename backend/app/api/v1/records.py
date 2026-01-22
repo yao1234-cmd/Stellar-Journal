@@ -7,6 +7,8 @@ from typing import List, Optional
 import uuid
 
 from app.core.database import get_db
+from app.core.deps import get_current_verified_user
+from app.models.user import User
 from app.models.record import Record, RecordType
 from app.schemas.record import RecordCreate, RecordResponse, RecordListResponse
 from app.services.emotion_service import emotion_service
@@ -14,10 +16,6 @@ from app.services.whisper_service import whisper_service
 from app.services.planet_service import planet_service
 
 router = APIRouter()
-
-
-# 临时用户ID（后续需要实现认证）
-TEMP_USER_ID = "00000000-0000-0000-0000-000000000001"
 
 
 @router.options("/")
@@ -29,36 +27,19 @@ async def options_records():
 @router.post("/", response_model=RecordResponse, status_code=status.HTTP_201_CREATED)
 async def create_record(
     record_data: RecordCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_verified_user)
 ):
     """
-    创建记录
+    创建记录（需要认证且邮箱已验证）
     
     - **type**: 记录类型 (mood/spark/thought)
     - **content**: 记录内容
     """
-    # #region agent log
-    import json
-    from datetime import datetime as dt
     try:
-        with open(r'd:\Planet\.cursor\debug.log', 'a', encoding='utf-8') as f:
-            f.write(json.dumps({"location": "records.py:40", "message": "create_record called", "data": {"type": record_data.type.value, "content_length": len(record_data.content), "TEMP_USER_ID": TEMP_USER_ID, "hypothesisId": "A"}, "timestamp": dt.now().timestamp() * 1000, "sessionId": "debug-session"}, ensure_ascii=False) + '\n')
-    except: pass
-    # #endregion
-    
-    try:
-        # #region agent log
-        from app.models.user import User
-        user_exists = db.query(User).filter(User.id == TEMP_USER_ID).first()
-        try:
-            with open(r'd:\Planet\.cursor\debug.log', 'a', encoding='utf-8') as f:
-                f.write(json.dumps({"location": "records.py:52", "message": "User check", "data": {"user_exists": user_exists is not None, "user_id": TEMP_USER_ID, "hypothesisId": "A"}, "timestamp": dt.now().timestamp() * 1000, "sessionId": "debug-session"}, ensure_ascii=False) + '\n')
-        except: pass
-        # #endregion
-        
         # 创建记录对象
         new_record = Record(
-            user_id=TEMP_USER_ID,
+            user_id=str(current_user.id),
             type=RecordType[record_data.type.value.upper()],
             content=record_data.content,
             audio_url=record_data.audio_url
@@ -168,16 +149,17 @@ async def get_records(
     skip: int = 0,
     limit: int = 50,
     record_type: str = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_verified_user)
 ):
     """
-    获取记录列表
+    获取记录列表（需要认证且邮箱已验证）
     
     - **skip**: 跳过数量
     - **limit**: 返回数量
     - **record_type**: 记录类型筛选 (mood/spark/thought)
     """
-    query = db.query(Record).filter(Record.user_id == TEMP_USER_ID)
+    query = db.query(Record).filter(Record.user_id == str(current_user.id))
     
     if record_type:
         try:
@@ -203,58 +185,24 @@ async def get_records(
 async def get_record_history(
     days: int = 30,
     record_type: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_verified_user)
 ):
     """
-    获取历史记录
+    获取历史记录（需要认证且邮箱已验证）
     
     - **days**: 获取最近多少天的记录（默认30天）
     - **record_type**: 筛选记录类型 (mood/spark/thought)，不传则返回所有
     """
-    # #region agent log
-    import json
-    from datetime import datetime as dt
-    try:
-        with open(r'd:\Planet\.cursor\debug.log', 'a', encoding='utf-8') as f:
-            f.write(json.dumps({"location": "records.py:310", "message": "get_record_history CALLED", "data": {"days": days, "record_type": record_type, "days_type": str(type(days)), "hypothesisId": "B"}, "timestamp": dt.now().timestamp() * 1000, "sessionId": "debug-session"}, ensure_ascii=False) + '\n')
-    except: pass
-    # #endregion
-    
-    print(f"📋 获取历史记录 - days: {days}, type: {record_type}")
-    
     try:
         from datetime import datetime, timedelta
         
         # 计算开始日期
         start_date = datetime.now() - timedelta(days=days)
-        print(f"📅 查询日期范围: {start_date} 到现在")
-        
-        # 转换用户ID
-        try:
-            user_uuid = uuid.UUID(TEMP_USER_ID)
-            print(f"👤 用户ID: {user_uuid}")
-            # #region agent log
-            try:
-                with open(r'd:\Planet\.cursor\debug.log', 'a', encoding='utf-8') as f:
-                    f.write(json.dumps({"location": "records.py:322", "message": "UUID conversion success", "data": {"TEMP_USER_ID": TEMP_USER_ID, "user_uuid": str(user_uuid), "hypothesisId": "C"}, "timestamp": dt.now().timestamp() * 1000, "sessionId": "debug-session"}, ensure_ascii=False) + '\n')
-            except: pass
-            # #endregion
-        except Exception as e:
-            print(f"❌ UUID转换失败: {e}, TEMP_USER_ID={TEMP_USER_ID}")
-            # #region agent log
-            try:
-                with open(r'd:\Planet\.cursor\debug.log', 'a', encoding='utf-8') as f:
-                    f.write(json.dumps({"location": "records.py:325", "message": "UUID conversion FAILED", "data": {"TEMP_USER_ID": TEMP_USER_ID, "error": str(e), "hypothesisId": "C"}, "timestamp": dt.now().timestamp() * 1000, "sessionId": "debug-session"}, ensure_ascii=False) + '\n')
-            except: pass
-            # #endregion
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"无效的用户ID格式: {str(e)}"
-            )
         
         # 构建查询
         query = db.query(Record).filter(
-            Record.user_id == user_uuid,
+            Record.user_id == current_user.id,
             Record.created_at >= start_date
         )
         
@@ -264,14 +212,6 @@ async def get_record_history(
         
         # 按时间倒序排列
         records = query.order_by(Record.created_at.desc()).all()
-        print(f"📦 查询到 {len(records)} 条记录")
-        
-        # #region agent log
-        try:
-            with open(r'd:\Planet\.cursor\debug.log', 'a', encoding='utf-8') as f:
-                f.write(json.dumps({"location": "records.py:351", "message": "Database query completed", "data": {"record_count": len(records), "start_date": start_date.isoformat(), "user_uuid": str(user_uuid), "record_type_filter": record_type, "hypothesisId": "D"}, "timestamp": dt.now().timestamp() * 1000, "sessionId": "debug-session"}, ensure_ascii=False) + '\n')
-        except: pass
-        # #endregion
         
         # 转换为响应格式
         result = []
@@ -309,26 +249,15 @@ async def get_record_history(
 
 
 @router.get("/{record_id}", response_model=RecordResponse)
-async def get_record(record_id: str, db: Session = Depends(get_db)):
-    """获取单条记录详情"""
-    # #region agent log
-    import json
-    from datetime import datetime as dt
-    try:
-        with open(r'd:\Planet\.cursor\debug.log', 'a', encoding='utf-8') as f:
-            f.write(json.dumps({"location": "records.py:203", "message": "get_record called", "data": {"record_id": record_id, "hypothesisId": "A"}, "timestamp": dt.now().timestamp() * 1000, "sessionId": "debug-session"}, ensure_ascii=False) + '\n')
-    except: pass
-    # #endregion
-    
+async def get_record(
+    record_id: str, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_verified_user)
+):
+    """获取单条记录详情（需要认证且邮箱已验证）"""
     try:
         record_uuid = uuid.UUID(record_id)
     except ValueError:
-        # #region agent log
-        try:
-            with open(r'd:\Planet\.cursor\debug.log', 'a', encoding='utf-8') as f:
-                f.write(json.dumps({"location": "records.py:209", "message": "UUID conversion failed", "data": {"record_id": record_id, "hypothesisId": "A"}, "timestamp": dt.now().timestamp() * 1000, "sessionId": "debug-session"}, ensure_ascii=False) + '\n')
-        except: pass
-        # #endregion
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="无效的记录ID格式"
@@ -336,7 +265,7 @@ async def get_record(record_id: str, db: Session = Depends(get_db)):
     
     record = db.query(Record).filter(
         Record.id == record_uuid,
-        Record.user_id == TEMP_USER_ID
+        Record.user_id == current_user.id
     ).first()
     
     if not record:
@@ -349,8 +278,12 @@ async def get_record(record_id: str, db: Session = Depends(get_db)):
 
 
 @router.delete("/{record_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_record(record_id: str, db: Session = Depends(get_db)):
-    """删除记录"""
+async def delete_record(
+    record_id: str, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_verified_user)
+):
+    """删除记录（需要认证且邮箱已验证）"""
     try:
         record_uuid = uuid.UUID(record_id)
     except ValueError:
@@ -361,7 +294,7 @@ async def delete_record(record_id: str, db: Session = Depends(get_db)):
     
     record = db.query(Record).filter(
         Record.id == record_uuid,
-        Record.user_id == TEMP_USER_ID
+        Record.user_id == current_user.id
     ).first()
     
     if not record:
