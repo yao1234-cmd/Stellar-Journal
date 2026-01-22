@@ -10,13 +10,8 @@ import json
 
 # #region agent log
 # Hypothesis A, B, D: Check raw environment variable value before Pydantic processing
-import os
 env_cors = os.environ.get("BACKEND_CORS_ORIGINS", None)
-log_data_env = {"env_var_value": env_cors, "env_var_type": type(env_cors).__name__, "env_var_len": len(env_cors) if env_cors else None, "env_var_repr": repr(env_cors)}
-try:
-    with open(r"d:\Planet\.cursor\debug.log", "a", encoding="utf-8") as f:
-        f.write(json.dumps({"location": "config.py:9", "message": "Raw BACKEND_CORS_ORIGINS env var", "data": log_data_env, "timestamp": __import__('time').time() * 1000, "sessionId": "debug-session", "hypothesisId": "A,B,D"}) + "\n")
-except: pass
+print(f"[DEBUG config.py:9] Raw BACKEND_CORS_ORIGINS env var: value={repr(env_cors)}, type={type(env_cors).__name__}, len={len(env_cors) if env_cors else None}", flush=True)
 # #endregion
 
 
@@ -43,15 +38,19 @@ class Settings(BaseSettings):
     def assemble_cors_origins(cls, v):
         # #region agent log
         # Hypothesis B, C: Check what value reaches the validator
-        log_data_validator = {"validator_input": v, "validator_input_type": type(v).__name__, "validator_input_repr": repr(v)}
-        try:
-            with open(r"d:\Planet\.cursor\debug.log", "a", encoding="utf-8") as f:
-                f.write(json.dumps({"location": "config.py:48", "message": "Validator input value", "data": log_data_validator, "timestamp": __import__('time').time() * 1000, "sessionId": "debug-session", "hypothesisId": "B,C"}) + "\n")
-        except: pass
+        print(f"[DEBUG config.py:38] Validator input: value={repr(v)}, type={type(v).__name__}", flush=True)
         # #endregion
         
+        # #region agent log
+        # Hypothesis C: Check if empty string case
         if isinstance(v, str):
+            print(f"[DEBUG config.py:44] String processing: len={len(v)}, empty={v == ''}, split_result={v.split(',') if v else []}", flush=True)
             return [i.strip() for i in v.split(",")]
+        # #endregion
+        
+        # #region agent log
+        print(f"[DEBUG config.py:49] Returning value as-is: {repr(v)}", flush=True)
+        # #endregion
         return v
     
     # Database
@@ -90,5 +89,14 @@ class Settings(BaseSettings):
     ALLOWED_AUDIO_FORMATS: List[str] = ["mp3", "wav", "m4a", "ogg"]
 
 
-settings = Settings()
+# #region agent log
+# Hypothesis A, D: Check if Settings instantiation succeeds
+print(f"[DEBUG config.py:88] Before Settings() instantiation", flush=True)
+try:
+    settings = Settings()
+    print(f"[DEBUG config.py:91] Settings instantiated successfully, BACKEND_CORS_ORIGINS={settings.BACKEND_CORS_ORIGINS}", flush=True)
+except Exception as e:
+    print(f"[DEBUG config.py:93] Settings instantiation FAILED: {type(e).__name__}: {str(e)}", flush=True)
+    raise
+# #endregion
 
