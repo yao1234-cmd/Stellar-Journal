@@ -4,6 +4,20 @@ Application Configuration using Pydantic Settings
 from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
+import os
+import json
+
+
+# #region agent log
+# Hypothesis A, B, D: Check raw environment variable value before Pydantic processing
+import os
+env_cors = os.environ.get("BACKEND_CORS_ORIGINS", None)
+log_data_env = {"env_var_value": env_cors, "env_var_type": type(env_cors).__name__, "env_var_len": len(env_cors) if env_cors else None, "env_var_repr": repr(env_cors)}
+try:
+    with open(r"d:\Planet\.cursor\debug.log", "a", encoding="utf-8") as f:
+        f.write(json.dumps({"location": "config.py:9", "message": "Raw BACKEND_CORS_ORIGINS env var", "data": log_data_env, "timestamp": __import__('time').time() * 1000, "sessionId": "debug-session", "hypothesisId": "A,B,D"}) + "\n")
+except: pass
+# #endregion
 
 
 class Settings(BaseSettings):
@@ -27,6 +41,15 @@ class Settings(BaseSettings):
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v):
+        # #region agent log
+        # Hypothesis B, C: Check what value reaches the validator
+        log_data_validator = {"validator_input": v, "validator_input_type": type(v).__name__, "validator_input_repr": repr(v)}
+        try:
+            with open(r"d:\Planet\.cursor\debug.log", "a", encoding="utf-8") as f:
+                f.write(json.dumps({"location": "config.py:48", "message": "Validator input value", "data": log_data_validator, "timestamp": __import__('time').time() * 1000, "sessionId": "debug-session", "hypothesisId": "B,C"}) + "\n")
+        except: pass
+        # #endregion
+        
         if isinstance(v, str):
             return [i.strip() for i in v.split(",")]
         return v
