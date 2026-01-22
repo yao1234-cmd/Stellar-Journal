@@ -198,27 +198,15 @@ export interface PlanetStats {
 
 export const planetApi = {
   // 获取星球状态
-  getState: (date?: string) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/0177d4de-2faa-4d99-960c-3205811fe5c0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.ts:151',message:'Calling getState API',data:{date,url:`${API_BASE_URL}/planet/state`},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
-    return api.get<PlanetState>('/planet/state', { params: { target_date: date } })
+  getState: (date?: string) => {    return api.get<PlanetState>('/planet/state', { params: { target_date: date } })
   },
 
   // 获取历史数据
-  getHistory: (days: number = 30) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/0177d4de-2faa-4d99-960c-3205811fe5c0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.ts:159',message:'Calling getHistory API',data:{days,url:`${API_BASE_URL}/planet/history`},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
-    return api.get<PlanetHistory>('/planet/history', { params: { days } })
+  getHistory: (days: number = 30) => {    return api.get<PlanetHistory>('/planet/history', { params: { days } })
   },
 
   // 获取统计信息
-  getStats: () => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/0177d4de-2faa-4d99-960c-3205811fe5c0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.ts:167',message:'Calling getStats API',data:{url:`${API_BASE_URL}/planet/stats`},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
-    return api.get<PlanetStats>('/planet/stats')
+  getStats: () => {    return api.get<PlanetStats>('/planet/stats')
   },
 }
 

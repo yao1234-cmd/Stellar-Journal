@@ -49,7 +49,24 @@ export default function RegisterPage() {
       await authApi.register({ username, email, password }) as any
       setSuccess(true)
     } catch (err: any) {
-      const errorMsg = err.response?.data?.detail || '注册失败，请稍后重试'
+      let errorMsg = '注册失败，请稍后重试'
+      
+      if (err.response?.data?.detail) {
+        const detail = err.response.data.detail
+        // Handle Pydantic validation errors (array of objects)
+        if (Array.isArray(detail) && detail.length > 0) {
+          errorMsg = detail[0].msg || detail[0].message || errorMsg
+        } 
+        // Handle string error
+        else if (typeof detail === 'string') {
+          errorMsg = detail
+        }
+        // Handle object error
+        else if (typeof detail === 'object' && detail.msg) {
+          errorMsg = detail.msg
+        }
+      }
+      
       setError(errorMsg)
     } finally {
       setIsLoading(false)

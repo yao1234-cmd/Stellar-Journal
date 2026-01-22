@@ -43,16 +43,7 @@ async def create_record(
             type=RecordType[record_data.type.value.upper()],
             content=record_data.content,
             audio_url=record_data.audio_url
-        )
-        
-        # #region agent log
-        try:
-            with open(r'd:\Planet\.cursor\debug.log', 'a', encoding='utf-8') as f:
-                f.write(json.dumps({"location": "records.py:67", "message": "Record object created", "data": {"record_type": str(new_record.type), "user_id": new_record.user_id, "hypothesisId": "B"}, "timestamp": dt.now().timestamp() * 1000, "sessionId": "debug-session"}, ensure_ascii=False) + '\n')
-        except: pass
-        # #endregion
-        
-        # 根据类型进行不同的处理
+        )        # 根据类型进行不同的处理
         if record_data.type == "mood":
             # 心情：AI情感分析
             emotion_result = await emotion_service.analyze_emotion(record_data.content)
@@ -99,46 +90,12 @@ async def create_record(
             )
             new_record.position_data = position
         
-        # 保存到数据库
-        # #region agent log
-        try:
-            with open(r'd:\Planet\.cursor\debug.log', 'a', encoding='utf-8') as f:
-                f.write(json.dumps({"location": "records.py:95", "message": "Before db.add", "data": {"record_id": str(new_record.id), "user_id": new_record.user_id, "hypothesisId": "C"}, "timestamp": dt.now().timestamp() * 1000, "sessionId": "debug-session"}, ensure_ascii=False) + '\n')
-        except: pass
-        # #endregion
-        
-        db.add(new_record)
-        
-        # #region agent log
-        try:
-            with open(r'd:\Planet\.cursor\debug.log', 'a', encoding='utf-8') as f:
-                f.write(json.dumps({"location": "records.py:105", "message": "Before db.commit", "data": {"hypothesisId": "C"}, "timestamp": dt.now().timestamp() * 1000, "sessionId": "debug-session"}, ensure_ascii=False) + '\n')
-        except: pass
-        # #endregion
-        
-        db.commit()
-        
-        # #region agent log
-        try:
-            with open(r'd:\Planet\.cursor\debug.log', 'a', encoding='utf-8') as f:
-                f.write(json.dumps({"location": "records.py:114", "message": "After db.commit SUCCESS", "data": {"record_id": str(new_record.id), "hypothesisId": "C"}, "timestamp": dt.now().timestamp() * 1000, "sessionId": "debug-session"}, ensure_ascii=False) + '\n')
-        except: pass
-        # #endregion
-        
-        db.refresh(new_record)
+        # 保存到数据库        db.add(new_record)        db.commit()        db.refresh(new_record)
         
         return new_record
         
     except Exception as e:
-        db.rollback()
-        # #region agent log
-        import traceback
-        try:
-            with open(r'd:\Planet\.cursor\debug.log', 'a', encoding='utf-8') as f:
-                f.write(json.dumps({"location": "records.py:104", "message": "Exception caught", "data": {"error_type": type(e).__name__, "error_msg": str(e)[:200], "traceback": traceback.format_exc()[:500], "hypothesisId": "E"}, "timestamp": dt.now().timestamp() * 1000, "sessionId": "debug-session"}, ensure_ascii=False) + '\n')
-        except: pass
-        # #endregion
-        raise HTTPException(
+        db.rollback()        raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"创建记录失败: {str(e)}"
         )

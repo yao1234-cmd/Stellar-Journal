@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -14,6 +14,9 @@ function VerifyEmailContent() {
   
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [message, setMessage] = useState('')
+  
+  // Use ref to prevent double execution in React StrictMode
+  const hasVerified = useRef(false)
 
   useEffect(() => {
     if (!token) {
@@ -21,6 +24,13 @@ function VerifyEmailContent() {
       setMessage('验证链接无效')
       return
     }
+    
+    // Prevent double execution in React StrictMode
+    if (hasVerified.current) {
+      return
+    }
+    
+    hasVerified.current = true
 
     const verifyEmail = async () => {
       try {

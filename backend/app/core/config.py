@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     
     # API
     API_V1_PREFIX: str = "/api/v1"
-    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000"]
+    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "https://*.vercel.app"]
     
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod

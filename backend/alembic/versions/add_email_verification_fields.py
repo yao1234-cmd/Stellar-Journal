@@ -1,7 +1,7 @@
 """Add email verification fields to users table
 
 Revision ID: add_email_verification
-Revises: 7fe88b5fc215
+Revises: initial_user_001
 Create Date: 2026-01-22 21:00:00.000000
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'add_email_verification'
-down_revision = '7fe88b5fc215'
+down_revision = 'initial_user_001'
 branch_labels = None
 depends_on = None
 

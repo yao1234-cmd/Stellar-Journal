@@ -17,17 +17,7 @@ async def get_planet_state(
 ):
     """
     获取星球当前状态（模拟数据）
-    """
-    # #region agent log
-    import json
-    from datetime import datetime as dt
-    try:
-        with open(r'd:\Planet\.cursor\debug.log', 'a', encoding='utf-8') as f:
-            f.write(json.dumps({"location": "planet_simple.py:20", "message": "get_planet_state called", "data": {"target_date": target_date, "hypothesisId": "F"}, "timestamp": dt.now().timestamp() * 1000, "sessionId": "debug-session"}, ensure_ascii=False) + '\n')
-    except: pass
-    # #endregion
-    
-    today = date.today()
+    """    today = date.today()
     target = datetime.strptime(target_date, "%Y-%m-%d").date() if target_date else today
     
     return {

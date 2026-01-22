@@ -27,39 +27,15 @@ export const usePlanetStore = create<PlanetStore>((set, get) => ({
   // 获取星球状态
   fetchPlanetState: async (date?: string) => {
     set({ loading: true, error: null })
-    try {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/0177d4de-2faa-4d99-960c-3205811fe5c0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'planetStore.ts:31',message:'Fetching planet state',data:{date},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
-      const state = await planetApi.getState(date) as any
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/0177d4de-2faa-4d99-960c-3205811fe5c0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'planetStore.ts:35',message:'Planet state fetched successfully',data:{state},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
-      set({ planetState: state, loading: false })
-    } catch (error: any) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/0177d4de-2faa-4d99-960c-3205811fe5c0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'planetStore.ts:40',message:'Failed to fetch planet state',data:{error:error.message,stack:error.stack},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
-      set({ error: error.message, loading: false })
+    try {      const state = await planetApi.getState(date) as any      set({ planetState: state, loading: false })
+    } catch (error: any) {      set({ error: error.message, loading: false })
     }
   },
 
   // 获取统计信息
   fetchStats: async () => {
-    try {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/0177d4de-2faa-4d99-960c-3205811fe5c0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'planetStore.ts:50',message:'Fetching stats',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
-      const stats = await planetApi.getStats() as any
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/0177d4de-2faa-4d99-960c-3205811fe5c0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'planetStore.ts:54',message:'Stats fetched successfully',data:{stats},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
-      set({ stats })
-    } catch (error: any) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/0177d4de-2faa-4d99-960c-3205811fe5c0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'planetStore.ts:59',message:'Failed to fetch stats',data:{error:error.message,stack:error.stack},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
-      console.error('Failed to fetch stats:', error)
+    try {      const stats = await planetApi.getStats() as any      set({ stats })
+    } catch (error: any) {      console.error('Failed to fetch stats:', error)
     }
   },
 

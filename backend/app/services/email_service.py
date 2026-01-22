@@ -76,10 +76,11 @@ class EmailService:
             
             # Send email
             response = resend.Emails.send(params)
+            print(f"✅ Email sent successfully to {email}, response: {response}")
             return True
             
         except Exception as e:
-            print(f"Failed to send verification email: {e}")
+            print(f"❌ Failed to send verification email to {email}: {type(e).__name__}: {e}")
             return False
     
     async def send_password_reset_email(self, email: str, username: str, token: str) -> bool:

@@ -3,7 +3,7 @@ Authentication API endpoints
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.core.database import get_db
 from app.core.security import (
     verify_password, 
@@ -26,6 +26,12 @@ from app.schemas.auth import (
 from app.services.email_service import email_service
 
 router = APIRouter()
+
+
+@router.options("/{full_path:path}")
+async def options_handler():
+    """处理所有 OPTIONS 预检请求"""
+    return {"status": "ok"}
 
 
 @router.post("/register", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
@@ -51,7 +57,7 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
     
     # Generate verification token
     verification_token = generate_verification_token()
-    verification_expires = datetime.utcnow() + timedelta(hours=24)
+    verification_expires = datetime.now(timezone.utc) + timedelta(hours=24)
     
     # Create user
     user = User(
@@ -76,7 +82,9 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
     
     if not email_sent:
         # Don't fail registration if email fails, user can request resend
-        print(f"Warning: Failed to send verification email to {user.email}")
+        print(f"⚠️ Warning: Failed to send verification email to {user.email}")
+    else:
+        print(f"✅ Verification email sent successfully to {user.email}")
     
     return MessageResponse(message="注册成功！请检查您的邮箱以验证账号")
 
@@ -86,6 +94,14 @@ async def verify_email(verification: EmailVerification, db: Session = Depends(ge
     """
     Verify user email with token
     """
+    # First, let's check if any user has this token (regardless of verification status)
+    user_any = db.query(User).filter(User.verification_token == verification.token).first()
+    
+    # If user_any is found but already verified, this is a duplicate request (React StrictMode)
+    if user_any and user_any.is_email_verified:
+        return MessageResponse(message="邮箱验证成功！您现在可以登录了")
+    
+    # Now the original query
     user = db.query(User).filter(
         User.verification_token == verification.token,
         User.is_email_verified == False
@@ -98,7 +114,7 @@ async def verify_email(verification: EmailVerification, db: Session = Depends(ge
         )
     
     # Check if token expired
-    if user.verification_token_expires and user.verification_token_expires < datetime.utcnow():
+    if user.verification_token_expires and user.verification_token_expires < datetime.now(timezone.utc):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="验证链接已过期，请重新注册或请求新的验证邮件"
@@ -210,7 +226,7 @@ async def resend_verification_email(email: str, db: Session = Depends(get_db)):
     
     # Generate new token
     verification_token = generate_verification_token()
-    verification_expires = datetime.utcnow() + timedelta(hours=24)
+    verification_expires = datetime.now(timezone.utc) + timedelta(hours=24)
     
     user.verification_token = verification_token
     user.verification_token_expires = verification_expires

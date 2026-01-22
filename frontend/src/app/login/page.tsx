@@ -24,15 +24,37 @@ export default function LoginPage() {
 
     try {
       const tokenResponse = await authApi.login({ email, password }) as any
+      
+      // 先保存token到store（这样axios拦截器才能在下一个请求中使用）
+      setAuth(tokenResponse.access_token, tokenResponse.refresh_token, null as any)
+      
+      // 然后获取用户信息（此时token已经在localStorage中，拦截器会自动添加）
       const userResponse = await authApi.getCurrentUser() as any
 
-      // 保存认证信息
+      // 更新完整的认证信息
       setAuth(tokenResponse.access_token, tokenResponse.refresh_token, userResponse)
 
       // 跳转到主页
       router.push('/')
     } catch (err: any) {
-      const errorMsg = err.response?.data?.detail || '登录失败，请检查邮箱和密码'
+      let errorMsg = '登录失败，请检查邮箱和密码'
+      
+      if (err.response?.data?.detail) {
+        const detail = err.response.data.detail
+        // Handle Pydantic validation errors (array of objects)
+        if (Array.isArray(detail) && detail.length > 0) {
+          errorMsg = detail[0].msg || detail[0].message || errorMsg
+        } 
+        // Handle string error
+        else if (typeof detail === 'string') {
+          errorMsg = detail
+        }
+        // Handle object error
+        else if (typeof detail === 'object' && detail.msg) {
+          errorMsg = detail.msg
+        }
+      }
+      
       setError(errorMsg)
     } finally {
       setIsLoading(false)
