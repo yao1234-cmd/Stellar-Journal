@@ -1,11 +1,33 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Mail, Lock, User, Sparkles, CheckCircle } from 'lucide-react'
 import { authApi } from '@/lib/api'
+
+// 简单的伪随机数生成器（seeded PRNG）用于确定性星星生成
+function mulberry32(seed: number) {
+  return function() {
+    let t = seed += 0x6D2B79F5
+    t = Math.imul(t ^ t >>> 15, t | 1)
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61)
+    return ((t ^ t >>> 14) >>> 0) / 4294967296
+  }
+}
+
+// 预计算星星数据
+function generateStars(count: number, seed: number = 12345) {
+  const rng = mulberry32(seed)
+  return Array.from({ length: count }, () => ({
+    left: rng() * 100,
+    top: rng() * 100,
+    opacity: rng() * 0.7 + 0.3,
+    duration: rng() * 3 + 2,
+    delay: rng() * 2,
+  }))
+}
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -17,6 +39,9 @@ export default function RegisterPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  
+  // 使用 useMemo 预计算星星，避免 SSR/客户端不匹配
+  const stars = useMemo(() => generateStars(100), [])
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -78,23 +103,23 @@ export default function RegisterPage() {
       <div className="min-h-screen bg-gradient-to-b from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4 overflow-hidden relative">
         {/* 星空背景 */}
         <div className="absolute inset-0 overflow-hidden">
-          {[...Array(100)].map((_, i) => (
+          {stars.map((star, i) => (
             <motion.div
               key={i}
               className="absolute w-1 h-1 bg-white rounded-full"
               style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                opacity: Math.random() * 0.7 + 0.3,
+                left: `${star.left}%`,
+                top: `${star.top}%`,
+                opacity: star.opacity,
               }}
               animate={{
                 scale: [1, 1.5, 1],
                 opacity: [0.3, 0.8, 0.3],
               }}
               transition={{
-                duration: Math.random() * 3 + 2,
+                duration: star.duration,
                 repeat: Infinity,
-                delay: Math.random() * 2,
+                delay: star.delay,
               }}
             />
           ))}
@@ -137,23 +162,23 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-gradient-to-b from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4 overflow-hidden relative">
       {/* 星空背景 */}
       <div className="absolute inset-0 overflow-hidden">
-        {[...Array(100)].map((_, i) => (
+        {stars.map((star, i) => (
           <motion.div
             key={i}
             className="absolute w-1 h-1 bg-white rounded-full"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              opacity: Math.random() * 0.7 + 0.3,
+              left: `${star.left}%`,
+              top: `${star.top}%`,
+              opacity: star.opacity,
             }}
             animate={{
               scale: [1, 1.5, 1],
               opacity: [0.3, 0.8, 0.3],
             }}
             transition={{
-              duration: Math.random() * 3 + 2,
+              duration: star.duration,
               repeat: Infinity,
-              delay: Math.random() * 2,
+              delay: star.delay,
             }}
           />
         ))}

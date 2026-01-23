@@ -2,6 +2,7 @@
 Email service using Resend
 """
 import resend
+import html
 from typing import Optional
 from app.core.config import settings
 
@@ -17,6 +18,8 @@ class EmailService:
         """Send email verification link"""
         try:
             verification_url = f"{settings.FRONTEND_URL}/verify-email?token={token}"
+            # HTML 转义用户名以防止 XSS/HTML 注入
+            safe_username = html.escape(username)
             
             html_content = f"""
             <html>
@@ -26,7 +29,7 @@ class EmailService:
                 </div>
                 
                 <div style="padding: 30px; background: #f9fafb; border-radius: 10px; margin-top: 20px;">
-                    <p style="font-size: 16px; color: #374151;">嗨 {username}，</p>
+                    <p style="font-size: 16px; color: #374151;">嗨 {safe_username}，</p>
                     
                     <p style="font-size: 16px; color: #374151; line-height: 1.6;">
                         感谢您注册 Stellar Journal！这是一个记录您情感星球的空间 🌍
@@ -87,6 +90,8 @@ class EmailService:
         """Send password reset link (for future use)"""
         try:
             reset_url = f"{settings.FRONTEND_URL}/reset-password?token={token}"
+            # HTML 转义用户名以防止 XSS/HTML 注入
+            safe_username = html.escape(username)
             
             html_content = f"""
             <html>
@@ -96,7 +101,7 @@ class EmailService:
                 </div>
                 
                 <div style="padding: 30px; background: #f9fafb; border-radius: 10px; margin-top: 20px;">
-                    <p style="font-size: 16px; color: #374151;">嗨 {username}，</p>
+                    <p style="font-size: 16px; color: #374151;">嗨 {safe_username}，</p>
                     
                     <p style="font-size: 16px; color: #374151; line-height: 1.6;">
                         我们收到了您的密码重置请求。

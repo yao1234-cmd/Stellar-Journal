@@ -72,3 +72,8 @@ class UserResponse(BaseModel):
 class MessageResponse(BaseModel):
     """Generic message response"""
     message: str
+
+
+class ResendVerificationRequest(BaseModel):
+    """Resend verification email request"""
+    email: EmailStr

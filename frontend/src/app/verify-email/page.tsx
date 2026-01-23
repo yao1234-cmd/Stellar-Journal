@@ -17,6 +17,7 @@ function VerifyEmailContent() {
   
   // Use ref to prevent double execution in React StrictMode
   const hasVerified = useRef(false)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     if (!token) {
@@ -38,8 +39,8 @@ function VerifyEmailContent() {
         setStatus('success')
         setMessage(response.message || '邮箱验证成功！')
         
-        // 3秒后跳转登录页
-        setTimeout(() => {
+        // 3秒后跳转登录页（保存 timer ID 以便清理）
+        timerRef.current = setTimeout(() => {
           router.push('/login')
         }, 3000)
       } catch (err: any) {
@@ -49,6 +50,13 @@ function VerifyEmailContent() {
     }
 
     verifyEmail()
+
+    // 清理函数：组件卸载时取消定时器
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+      }
+    }
   }, [token, router])
 
   return (
@@ -109,6 +117,12 @@ function VerifyEmailContent() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  // 立即取消自动跳转定时器
+                  if (timerRef.current) {
+                    clearTimeout(timerRef.current)
+                  }
+                }}
                 className="mt-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold px-8 py-3 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all"
               >
                 立即登录

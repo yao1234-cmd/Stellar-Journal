@@ -5,6 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
 from app.core.database import get_db
+import logging
+
+logger = logging.getLogger(__name__)
 from app.core.security import (
     verify_password, 
     get_password_hash, 
@@ -21,7 +24,8 @@ from app.schemas.auth import (
     Token, 
     EmailVerification,
     UserResponse,
-    MessageResponse
+    MessageResponse,
+    ResendVerificationRequest
 )
 from app.services.email_service import email_service
 
@@ -82,9 +86,9 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
     
     if not email_sent:
         # Don't fail registration if email fails, user can request resend
-        print(f"⚠️ Warning: Failed to send verification email to {user.email}")
+        logger.warning("Failed to send verification email to user")
     else:
-        print(f"✅ Verification email sent successfully to {user.email}")
+        logger.info("Verification email sent successfully")
     
     return MessageResponse(message="注册成功！请检查您的邮箱以验证账号")
 
@@ -211,12 +215,15 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
 
 
 @router.post("/resend-verification", response_model=MessageResponse)
-async def resend_verification_email(email: str, db: Session = Depends(get_db)):
+async def resend_verification_email(
+    payload: ResendVerificationRequest, 
+    db: Session = Depends(get_db)
+):
     """
     Resend verification email
     """
     user = db.query(User).filter(
-        User.email == email,
+        User.email == payload.email,
         User.is_email_verified == False
     ).first()
     
@@ -233,10 +240,25 @@ async def resend_verification_email(email: str, db: Session = Depends(get_db)):
     db.commit()
     
     # Send email
-    await email_service.send_verification_email(
-        email=user.email,
-        username=user.username,
-        token=verification_token
-    )
+    try:
+        email_sent = await email_service.send_verification_email(
+            email=user.email,
+            username=user.username,
+            token=verification_token
+        )
+        
+        if not email_sent:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="发送验证邮件失败，请稍后重试"
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to send verification email: {type(e).__name__}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="发送验证邮件失败，请稍后重试"
+        )
     
     return MessageResponse(message="验证邮件已发送")

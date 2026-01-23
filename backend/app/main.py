@@ -19,6 +19,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.BACKEND_CORS_ORIGINS,  # 从配置读取
+    allow_origin_regex=settings.BACKEND_CORS_ORIGIN_REGEX,  # Vercel 通配符支持
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

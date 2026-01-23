@@ -228,7 +228,7 @@ async def get_record(
     
     record = db.query(Record).filter(
         Record.id == record_uuid,
-        Record.user_id == current_user.id
+        Record.user_id == str(current_user.id)
     ).first()
     
     if not record:
@@ -257,7 +257,7 @@ async def delete_record(
     
     record = db.query(Record).filter(
         Record.id == record_uuid,
-        Record.user_id == current_user.id
+        Record.user_id == str(current_user.id)
     ).first()
     
     if not record:

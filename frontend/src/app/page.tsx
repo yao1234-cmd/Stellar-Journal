@@ -11,22 +11,22 @@ import StatsPanel from '@/components/ui/StatsPanel'
 
 export default function Home() {
   const router = useRouter()
-  const { isAuthenticated, clearAuth, user } = useAuthStore()
+  const { isAuthenticated, clearAuth, user, _hasHydrated } = useAuthStore()
 
-  // 路由保护：未登录跳转到登录页
+  // 路由保护：等待 hydration 完成后再检查认证状态
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (_hasHydrated && !isAuthenticated) {
       router.push('/login')
     }
-  }, [isAuthenticated, router])
+  }, [_hasHydrated, isAuthenticated, router])
 
   const handleLogout = () => {
     clearAuth()
     router.push('/login')
   }
 
-  // 未认证时显示加载状态
-  if (!isAuthenticated) {
+  // 等待 hydration 或未认证时显示加载状态
+  if (!_hasHydrated || !isAuthenticated) {
     return (
       <div className="w-screen h-screen bg-gradient-to-b from-indigo-950 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-white text-xl">Loading...</div>

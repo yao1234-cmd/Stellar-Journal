@@ -18,13 +18,15 @@ const api = axios.create({
 // 请求拦截器 - 自动注入 token
 api.interceptors.request.use(
   (config) => {
-    // 从 localStorage 读取 token（因为 zustand persist）
-    const authStorage = localStorage.getItem('auth-storage')
-    if (authStorage) {
+    // SSR 保护：仅在浏览器环境读取 localStorage
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
       try {
-        const { state } = JSON.parse(authStorage)
-        if (state?.accessToken) {
-          config.headers.Authorization = `Bearer ${state.accessToken}`
+        const authStorage = localStorage.getItem('auth-storage')
+        if (authStorage) {
+          const { state } = JSON.parse(authStorage)
+          if (state?.accessToken) {
+            config.headers.Authorization = `Bearer ${state.accessToken}`
+          }
         }
       } catch (e) {
         console.error('Failed to parse auth storage:', e)
@@ -53,9 +55,12 @@ api.interceptors.response.use(
         if (authStorage) {
           const { state } = JSON.parse(authStorage)
           if (state?.refreshToken) {
-            const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-              refresh_token: state.refreshToken
-            })
+            // 修复：将 refresh_token 作为查询参数发送（与后端一致）
+            const response = await axios.post(
+              `${API_BASE_URL}/auth/refresh`,
+              null,
+              { params: { refresh_token: state.refreshToken } }
+            )
             
             // 更新 token
             const { access_token, refresh_token } = response.data
@@ -258,9 +263,11 @@ export const authApi = {
     return api.post<TokenResponse>('/auth/login', data)
   },
 
-  // 刷新 token
+  // 刷新 token（使用查询参数）
   refreshToken: (refreshToken: string) => {
-    return api.post<TokenResponse>('/auth/refresh', { refresh_token: refreshToken })
+    return api.post<TokenResponse>('/auth/refresh', null, { 
+      params: { refresh_token: refreshToken } 
+    })
   },
 
   // 获取当前用户信息
