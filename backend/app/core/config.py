@@ -1,7 +1,7 @@
 """
 Application Configuration using Pydantic Settings
 """
-from typing import List
+from typing import List, Union
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
 import os
@@ -31,11 +31,11 @@ class Settings(BaseSettings):
     
     # API
     API_V1_PREFIX: str = "/api/v1"
-    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "https://*.vercel.app"]
+    BACKEND_CORS_ORIGINS: Union[List[str], str] = ["http://localhost:3000", "https://*.vercel.app"]
     
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
-    def assemble_cors_origins(cls, v):
+    def assemble_cors_origins(cls, v) -> List[str]:
         # #region agent log
         # Hypothesis B, C: Check what value reaches the validator
         print(f"[DEBUG config.py:38] Validator input: value={repr(v)}, type={type(v).__name__}", flush=True)
@@ -45,11 +45,13 @@ class Settings(BaseSettings):
         # Hypothesis C: Check if empty string case
         if isinstance(v, str):
             print(f"[DEBUG config.py:44] String processing: len={len(v)}, empty={v == ''}, split_result={v.split(',') if v else []}", flush=True)
-            return [i.strip() for i in v.split(",")]
+            result = [i.strip() for i in v.split(",") if i.strip()]
+            print(f"[DEBUG config.py:46] String processing result: {result}", flush=True)
+            return result
         # #endregion
         
         # #region agent log
-        print(f"[DEBUG config.py:49] Returning value as-is: {repr(v)}", flush=True)
+        print(f"[DEBUG config.py:51] Returning value as-is: {repr(v)}", flush=True)
         # #endregion
         return v
     
