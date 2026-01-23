@@ -23,29 +23,18 @@ export default function RecordPanel() {
   const { refreshPlanet } = usePlanetStore()
 
   const handleSubmit = async () => {
-    console.log('🔘 发送按钮被点击!')
-    console.log('📋 内容:', content)
-    console.log('🏷️ 类型:', selectedType)
-    console.log('⏳ Loading 状态:', loading)
-    
     if (!content.trim()) {
-      console.warn('⚠️ 内容为空，取消提交')
       return
     }
 
-    console.log('✅ 验证通过，准备创建记录...')
     const result = await createRecord({
       type: selectedType,
       content: content.trim(),
     })
 
     if (result) {
-      console.log('🎉 记录创建成功，清空输入框')
       setContent('')
-      // 刷新星球状态
       await refreshPlanet()
-    } else {
-      console.error('❌ 记录创建失败')
     }
   }
 
@@ -111,11 +100,7 @@ export default function RecordPanel() {
 
           {/* 发送按钮 */}
           <button
-            onClick={() => {
-              console.log('🖱️ 按钮点击事件触发')
-              console.log('按钮是否禁用:', !content.trim() || loading)
-              handleSubmit()
-            }}
+            onClick={handleSubmit}
             disabled={!content.trim() || loading}
             className="p-2 rounded-lg bg-stellar-500 text-white hover:bg-stellar-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >

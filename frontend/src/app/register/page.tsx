@@ -141,7 +141,7 @@ export default function RegisterPage() {
           
           <h2 className="text-2xl font-bold text-white mb-4">注册成功！</h2>
           <p className="text-white/80 mb-6">
-            我们已向您的邮箱发送了一封验证邮件，请查收并点击链接验证您的邮箱。
+            您的账号已创建成功，现在可以登录并开始记录您的情感星球之旅 ✨
           </p>
           
           <Link href="/login">
@@ -150,7 +150,7 @@ export default function RegisterPage() {
               whileTap={{ scale: 0.95 }}
               className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold px-8 py-3 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all"
             >
-              前往登录
+              立即登录
             </motion.button>
           </Link>
         </motion.div>

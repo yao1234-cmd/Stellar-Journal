@@ -2,8 +2,10 @@
  * Authentication Store
  * 管理用户认证状态、Token 存储和刷新
  * 
- * 安全注意：Token 不再持久化到 localStorage 以防止 XSS 攻击
- * Token 仅保存在内存中，页面刷新后需要重新登录
+ * Token 持久化策略：
+ * - Access Token 有效期：7 天
+ * - Refresh Token 有效期：30 天
+ * - Token 存储在 localStorage 以支持 7 天自动登录
  */
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
@@ -64,12 +66,12 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage', // localStorage key
-      // 安全优化：不再持久化敏感 token，仅持久化用户信息和登录状态标志
+      // 持久化 token 以支持 7 天自动登录
       partialize: (state) => ({ 
         user: state.user,
+        accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
-        // accessToken 和 refreshToken 不再持久化
-        // 这意味着刷新页面后需要重新登录，但更安全
       }),
       onRehydrateStorage: () => (state) => {
         // Hydration 完成后设置标志

@@ -38,12 +38,9 @@ export const useRecordStore = create<RecordStore>((set) => ({
 
   // 创建记录
   createRecord: async (data) => {
-    console.log('📝 开始创建记录:', data)
     set({ loading: true, error: null })
     try {
-      console.log('🚀 调用 API...')
-      const { data: record } = await recordsApi.create(data)
-      console.log('✅ 记录创建成功:', record)
+      const record = await recordsApi.create(data) as any
       set((state) => ({
         records: [record, ...state.records],
         currentRecord: record,
@@ -52,7 +49,6 @@ export const useRecordStore = create<RecordStore>((set) => ({
       return record
     } catch (error: any) {
       console.error('❌ 创建记录失败:', error)
-      console.error('错误详情:', error.response?.data || error.message)
       set({ error: error.message, loading: false })
       return null
     }

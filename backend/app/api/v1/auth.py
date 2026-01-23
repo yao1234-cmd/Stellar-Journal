@@ -41,7 +41,7 @@ async def options_handler():
 @router.post("/register", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
 async def register(user_data: UserRegister, db: Session = Depends(get_db)):
     """
-    Register a new user and send verification email
+    Register a new user (email verification temporarily disabled)
     """
     # Check if username exists
     existing_user = db.query(User).filter(User.username == user_data.username).first()
@@ -59,38 +59,38 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
             detail="邮箱已被注册"
         )
     
-    # Generate verification token
-    verification_token = generate_verification_token()
-    verification_expires = datetime.now(timezone.utc) + timedelta(hours=24)
+    # [TEMPORARY] Skip email verification - auto verify on registration
+    # TODO: Re-enable when domain is configured for email sending
+    # verification_token = generate_verification_token()
+    # verification_expires = datetime.now(timezone.utc) + timedelta(hours=24)
     
-    # Create user
+    # Create user with email pre-verified
     user = User(
         username=user_data.username,
         email=user_data.email,
         hashed_password=get_password_hash(user_data.password),
-        is_email_verified=False,
-        verification_token=verification_token,
-        verification_token_expires=verification_expires
+        is_email_verified=True,  # ✅ Auto-verify without email
+        verification_token=None,
+        verification_token_expires=None
     )
     
     db.add(user)
     db.commit()
     db.refresh(user)
     
-    # Send verification email
-    email_sent = await email_service.send_verification_email(
-        email=user.email,
-        username=user.username,
-        token=verification_token
-    )
+    # [DISABLED] Send verification email - requires domain configuration
+    # email_sent = await email_service.send_verification_email(
+    #     email=user.email,
+    #     username=user.username,
+    #     token=verification_token
+    # )
+    # if not email_sent:
+    #     logger.warning("Failed to send verification email to user")
+    # else:
+    #     logger.info("Verification email sent successfully")
     
-    if not email_sent:
-        # Don't fail registration if email fails, user can request resend
-        logger.warning("Failed to send verification email to user")
-    else:
-        logger.info("Verification email sent successfully")
-    
-    return MessageResponse(message="注册成功！请检查您的邮箱以验证账号")
+    logger.info(f"User {user.username} registered successfully (auto-verified)")
+    return MessageResponse(message="注册成功！请登录")
 
 
 @router.post("/verify-email", response_model=MessageResponse)
@@ -137,7 +137,7 @@ async def verify_email(verification: EmailVerification, db: Session = Depends(ge
 @router.post("/login", response_model=Token)
 async def login(credentials: UserLogin, db: Session = Depends(get_db)):
     """
-    Login with email and password
+    Login with email and password (email verification temporarily disabled)
     """
     # Find user by email
     user = db.query(User).filter(User.email == credentials.email).first()
@@ -154,13 +154,15 @@ async def login(credentials: UserLogin, db: Session = Depends(get_db)):
             detail="账号已被禁用"
         )
     
-    if not user.is_email_verified:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="请先验证您的邮箱"
-        )
+    # [DISABLED] Email verification check - temporarily disabled
+    # TODO: Re-enable when domain is configured for email sending
+    # if not user.is_email_verified:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_403_FORBIDDEN,
+    #         detail="请先验证您的邮箱"
+    #     )
     
-    # Create tokens
+    # Create tokens (7-day auto-login via access token)
     access_token = create_access_token(data={"sub": str(user.id)})
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
     

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Calendar, Heart, Sparkles, MessageCircle, ChevronDown } from 'lucide-react'
 import { useRecordStore } from '@/stores/recordStore'
+import api from '@/lib/api'
 
 type RecordType = 'mood' | 'spark' | 'thought'
 
@@ -32,6 +33,7 @@ const typeConfig = {
 
 export default function RecordDrawer() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
   const [records, setRecords] = useState<JournalRecord[]>([])
   const [selectedType, setSelectedType] = useState<RecordType | 'all'>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -45,9 +47,8 @@ export default function RecordDrawer() {
 
   const fetchRecords = async () => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
-      const response = await fetch(`${API_URL}/records/history?days=30`)
-      const data = await response.json()
+      // ✅ 使用 api 客户端（自动注入 token）
+      const data = await api.get('/records/history', { params: { days: 30 } }) as any
       
       // 确保返回的是数组
       if (Array.isArray(data)) {
@@ -84,16 +85,41 @@ export default function RecordDrawer() {
 
   return (
     <>
-      {/* 触发按钮 */}
-      <motion.button
+      {/* 触发按钮 - 右侧边缘悬浮效果（时光轴打开时隐藏） */}
+      {!isOpen && (
+        <motion.button
         onClick={() => setIsOpen(true)}
-        className="fixed top-6 right-6 z-40 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white transition-all shadow-lg"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className="fixed top-1/2 -translate-y-1/2 z-[60] py-4 bg-white/10 backdrop-blur-md text-white shadow-lg border-l border-white/20"
+        style={{
+          right: 0,
+          borderTopLeftRadius: '12px',
+          borderBottomLeftRadius: '12px',
+        }}
+        animate={{
+          width: isHovered ? '120px' : '48px',
+          paddingLeft: isHovered ? '16px' : '12px',
+          paddingRight: isHovered ? '16px' : '12px',
+        }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        whileTap={{ scale: 0.98 }}
       >
-        <Calendar className="w-5 h-5 inline mr-2" />
-        时光轴
+        <div className="flex items-center justify-center gap-2">
+          <Calendar className="w-5 h-5 flex-shrink-0" />
+          <motion.span
+            animate={{
+              opacity: isHovered ? 1 : 0,
+              width: isHovered ? 'auto' : 0,
+            }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden whitespace-nowrap text-sm font-medium"
+          >
+            时光轴
+          </motion.span>
+        </div>
       </motion.button>
+      )}
 
       {/* 抽屉面板 */}
       <AnimatePresence>

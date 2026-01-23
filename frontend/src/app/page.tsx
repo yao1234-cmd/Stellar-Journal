@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores/authStore'
 import { LogOut } from 'lucide-react'
@@ -8,35 +8,51 @@ import PlanetScene from '@/components/planet/PlanetScene'
 import RecordPanel from '@/components/ui/RecordPanel'
 import RecordDrawer from '@/components/ui/RecordDrawer'
 import StatsPanel from '@/components/ui/StatsPanel'
+import SplashScreen from '@/components/ui/SplashScreen'
 
 export default function Home() {
   const router = useRouter()
   const { isAuthenticated, clearAuth, user, _hasHydrated } = useAuthStore()
+  const [showSplash, setShowSplash] = useState(true)  // 初始就显示动画，避免主界面闪现
 
-  // 路由保护：等待 hydration 完成后再检查认证状态
+  // 启动画面逻辑：3.5 秒后自动隐藏
   useEffect(() => {
-    if (_hasHydrated && !isAuthenticated) {
+    const timer = setTimeout(() => {
+      setShowSplash(false)
+    }, 3500)
+    
+    return () => clearTimeout(timer)
+  }, [])
+
+  // 路由保护：启动画面结束后再检查认证状态
+  useEffect(() => {
+    if (_hasHydrated && !isAuthenticated && !showSplash) {
       router.push('/login')
     }
-  }, [_hasHydrated, isAuthenticated, router])
+  }, [_hasHydrated, isAuthenticated, showSplash, router])
 
   const handleLogout = () => {
     clearAuth()
     router.push('/login')
   }
 
-  // 等待 hydration 或未认证时显示加载状态
-  if (!_hasHydrated || !isAuthenticated) {
+  // 等待 hydration 时显示启动画面
+  if (!_hasHydrated) {
     return (
-      <div className="w-screen h-screen bg-gradient-to-b from-indigo-950 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
-      </div>
+      <>
+        <SplashScreen show={showSplash} onComplete={() => setShowSplash(false)} />
+        <div className="w-screen h-screen bg-gradient-to-b from-indigo-950 via-purple-900 to-slate-900" />
+      </>
     )
   }
 
   return (
-    <main className="relative w-screen h-screen overflow-hidden bg-gradient-to-b from-indigo-950 via-purple-900 to-slate-900">
-      {/* 3D 星球场景 */}
+    <>
+      {/* 启动画面 */}
+      <SplashScreen show={showSplash} onComplete={() => setShowSplash(false)} />
+      
+      <main className="relative w-screen h-screen overflow-hidden bg-gradient-to-b from-indigo-950 via-purple-900 to-slate-900">
+        {/* 3D 星球场景 */}
       <div className="canvas-container">
         <Suspense fallback={<LoadingFallback />}>
           <PlanetScene />
@@ -77,6 +93,7 @@ export default function Home() {
         <RecordDrawer />
       </div>
     </main>
+    </>
   )
 }
 
