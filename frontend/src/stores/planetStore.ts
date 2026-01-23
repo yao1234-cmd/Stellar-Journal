@@ -27,15 +27,21 @@ export const usePlanetStore = create<PlanetStore>((set, get) => ({
   // 获取星球状态
   fetchPlanetState: async (date?: string) => {
     set({ loading: true, error: null })
-    try {      const state = await planetApi.getState(date) as any      set({ planetState: state, loading: false })
-    } catch (error: any) {      set({ error: error.message, loading: false })
+    try {
+      const state = await planetApi.getState(date) as any
+      set({ planetState: state, loading: false })
+    } catch (error: any) {
+      set({ error: error.message, loading: false })
     }
   },
 
   // 获取统计信息
   fetchStats: async () => {
-    try {      const stats = await planetApi.getStats() as any      set({ stats })
-    } catch (error: any) {      console.error('Failed to fetch stats:', error)
+    try {
+      const stats = await planetApi.getStats() as any
+      set({ stats })
+    } catch (error: any) {
+      console.error('Failed to fetch stats:', error)
     }
   },
 
