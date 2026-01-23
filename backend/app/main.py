@@ -4,14 +4,18 @@ FastAPI Application Entry Point
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api.v1 import api_router# Initialize FastAPI app
+from app.api.v1 import api_router
+
+# Initialize FastAPI app
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     description="星迹 - 将情感转化为宇宙的记录应用",
     docs_url="/docs" if settings.DEBUG else None,
     redoc_url="/redoc" if settings.DEBUG else None,
-)# CORS middleware
+)
+
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.BACKEND_CORS_ORIGINS,  # 从配置读取
@@ -19,10 +23,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
-)# Include API router
-app.include_router(api_router, prefix=settings.API_V1_PREFIX)@app.get("/")
+)
+
+# Include API router
+app.include_router(api_router, prefix=settings.API_V1_PREFIX)
+
+
+@app.get("/")
 async def root():
-    """Health check endpoint"""    return {
+    """Health check endpoint"""
+    return {
         "name": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "status": "healthy",
