@@ -6,38 +6,40 @@ from app.core.database import SessionLocal
 from app.models.user import User
 
 def delete_test_users():
-    """删除指定的测试用户"""
+    """删除指定的用户"""
     db = SessionLocal()
     
     try:
-        # 从环境变量加载测试邮箱列表，或使用非 PII 占位符
+        # 从环境变量加载邮箱列表
         test_emails_env = os.environ.get("TEST_USER_EMAILS", "")
         
         if test_emails_env:
             # 从环境变量解析邮箱列表（逗号分隔）
             test_emails = [email.strip() for email in test_emails_env.split(",") if email.strip()]
         else:
-            # 使用确定性的非 PII 占位符
+            # 默认要删除的邮箱列表
             test_emails = [
-                "test_user_1@example.test",
-                "test_user_2@example.test",
-                "test_user_3@example.test"
+                "chenyao@zerozero.cn"
             ]
         
-        # 验证：确保没有使用真实邮箱
+        # 显示将要删除的用户
+        print(f"将要删除以下邮箱的用户:")
         for email in test_emails:
-            if not (email.endswith("@example.test") or email.endswith("@test.local")):
-                # 无论来源如何，非测试域名都应该报错并停止
-                print(f"❌ 错误: 邮箱 {email} 不是有效的测试邮箱域名")
-                print(f"   只允许删除以 @example.test 或 @test.local 结尾的邮箱")
-                print(f"   来源: {'环境变量 TEST_USER_EMAILS' if test_emails_env else '默认配置'}")
-                return  # 提前返回，避免触发外层异常处理
+            print(f"  - {email}")
+        
+        # 确认操作
+        confirm = input(f"\n⚠️  确认删除这 {len(test_emails)} 个用户? (输入 'yes' 确认): ")
+        
+        if confirm.lower() != 'yes':
+            print("❌ 取消删除操作")
+            return
         
         deleted_count = 0
         
         for email in test_emails:
             user = db.query(User).filter(User.email == email).first()
             if user:
+                print(f"删除用户: {user.username} ({email})")
                 db.delete(user)
                 deleted_count += 1
                 print(f"✅ 已删除用户: {email}")
@@ -46,7 +48,7 @@ def delete_test_users():
         
         if deleted_count > 0:
             db.commit()
-            print(f"\n🎉 成功删除 {deleted_count} 个测试用户")
+            print(f"\n🎉 成功删除 {deleted_count} 个用户")
         else:
             print("\n❌ 没有找到需要删除的用户")
             
