@@ -43,7 +43,9 @@ async def create_record(
             type=RecordType[record_data.type.value.upper()],
             content=record_data.content,
             audio_url=record_data.audio_url
-        )        # 根据类型进行不同的处理
+        )
+        
+        # 根据类型进行不同的处理
         if record_data.type == "mood":
             # 心情：AI情感分析
             emotion_result = await emotion_service.analyze_emotion(record_data.content)
@@ -90,12 +92,16 @@ async def create_record(
             )
             new_record.position_data = position
         
-        # 保存到数据库        db.add(new_record)        db.commit()        db.refresh(new_record)
+        # 保存到数据库
+        db.add(new_record)
+        db.commit()
+        db.refresh(new_record)
         
         return new_record
         
     except Exception as e:
-        db.rollback()        raise HTTPException(
+        db.rollback()
+        raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"创建记录失败: {str(e)}"
         )

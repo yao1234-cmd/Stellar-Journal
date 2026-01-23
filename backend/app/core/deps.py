@@ -20,14 +20,17 @@ async def get_current_user(
 ) -> User:
     """
     Get current authenticated user from JWT token
-    """    credentials_exception = HTTPException(
+    """
+    credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="无法验证凭据",
         headers={"WWW-Authenticate": "Bearer"},
     )
     
     # Decode token
-    token = credentials.credentials    payload = decode_token(token)    if payload is None:
+    token = credentials.credentials
+    payload = decode_token(token)
+    if payload is None:
         raise credentials_exception
     
     # Validate token type
@@ -48,12 +51,17 @@ async def get_current_user(
         raise credentials_exception
     
     # Get user from database
-    user = db.query(User).filter(User.id == user_id).first()    if user is None:        raise credentials_exception
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None:
+        raise credentials_exception
     
-    if not user.is_active:        raise HTTPException(
+    if not user.is_active:
+        raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="用户已被禁用"
-        )    return user
+        )
+    
+    return user
 
 
 async def get_current_verified_user(

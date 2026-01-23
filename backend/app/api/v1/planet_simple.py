@@ -17,7 +17,8 @@ async def get_planet_state(
 ):
     """
     获取星球当前状态（模拟数据）
-    """    today = date.today()
+    """
+    today = date.today()
     target = datetime.strptime(target_date, "%Y-%m-%d").date() if target_date else today
     
     return {
