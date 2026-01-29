@@ -163,51 +163,56 @@ class PlanetService:
     ) -> List[Dict]:
         """
         获取星球历史
-        
-        Args:
-            db: 数据库会话
-            user_id: 用户ID
-            days: 回溯天数
-            
-        Returns:
-            历史数据列表
         """
         end_date = date.today()
         start_date = end_date - timedelta(days=days)
+        start_datetime = datetime.combine(start_date, datetime.min.time())
+        end_datetime = datetime.combine(end_date, datetime.max.time())
         
-        # 按日期分组统计
+        # 1. 一次性查询时间范围内的所有心情记录
+        mood_records = db.query(
+            func.date(Record.created_at).label('date'),
+            Record.color_hex
+        ).filter(
+            Record.user_id == user_id,
+            Record.type == RecordType.MOOD,
+            Record.created_at >= start_datetime,
+            Record.created_at <= end_datetime
+        ).order_by(Record.created_at.desc()).all()
+        
+        # 构建心情字典：日期 -> 最新颜色
+        mood_map = {}
+        for r in mood_records:
+            # 由于是倒序排列，只有第一次遇到的日期（最新的）会被记录
+            d_str = r.date.isoformat() if hasattr(r.date, 'isoformat') else str(r.date)
+            if d_str not in mood_map:
+                mood_map[d_str] = r.color_hex
+
+        # 2. 一次性查询每日记录总数
+        daily_counts = db.query(
+            func.date(Record.created_at).label('date'),
+            func.count(Record.id).label('count')
+        ).filter(
+            Record.user_id == user_id,
+            Record.created_at >= start_datetime,
+            Record.created_at <= end_datetime
+        ).group_by(func.date(Record.created_at)).all()
+        
+        count_map = {
+            (r.date.isoformat() if hasattr(r.date, 'isoformat') else str(r.date)): r.count 
+            for r in daily_counts
+        }
+
+        # 3. 组装结果
         history = []
         current_date = start_date
-        
         while current_date <= end_date:
-            start_datetime = datetime.combine(current_date, datetime.min.time())
-            end_datetime = datetime.combine(current_date, datetime.max.time())
-            
-            # 查询当日心情记录
-            mood_record = db.query(Record).filter(
-                and_(
-                    Record.user_id == user_id,
-                    Record.type == RecordType.MOOD,
-                    Record.created_at >= start_datetime,
-                    Record.created_at <= end_datetime
-                )
-            ).order_by(Record.created_at.desc()).first()
-            
-            # 统计当日总记录数
-            count = db.query(func.count(Record.id)).filter(
-                and_(
-                    Record.user_id == user_id,
-                    Record.created_at >= start_datetime,
-                    Record.created_at <= end_datetime
-                )
-            ).scalar()
-            
+            d_str = current_date.isoformat()
             history.append({
-                "date": current_date.isoformat(),
-                "atmosphere_color": mood_record.color_hex if mood_record else "#CCCCCC",
-                "record_count": count or 0
+                "date": d_str,
+                "atmosphere_color": mood_map.get(d_str, "#CCCCCC"),
+                "record_count": count_map.get(d_str, 0)
             })
-            
             current_date += timedelta(days=1)
         
         return history
