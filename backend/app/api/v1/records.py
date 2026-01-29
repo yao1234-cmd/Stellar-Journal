@@ -67,7 +67,7 @@ async def create_record(
             # 计算星星位置
             # 查询已有星星数量
             spark_count = db.query(Record).filter(
-                Record.user_id == TEMP_USER_ID,
+                Record.user_id == str(current_user.id),
                 Record.type == RecordType.SPARK
             ).count()
             
