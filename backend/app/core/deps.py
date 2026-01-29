@@ -69,13 +69,14 @@ async def get_current_verified_user(
     current_user: User = Depends(get_current_user)
 ) -> User:
     """
-    Get current user and verify email is confirmed
+    Get current user and verify email is confirmed (temporarily disabled check)
     """
-    if not current_user.is_email_verified:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="请先验证您的邮箱"
-        )
+    # [TEMPORARY] Disable email verification check to match auth.py logic
+    # if not current_user.is_email_verified:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_403_FORBIDDEN,
+    #         detail="请先验证您的邮箱"
+    #     )
     return current_user
 
 
