@@ -1,0 +1,7 @@
+# 测试报告与日志
+reports/
+logs/
+allure.log
+
+# Pytest 缓存
+.pytest_cache/

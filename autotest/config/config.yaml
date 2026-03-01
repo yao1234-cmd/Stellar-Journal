@@ -1,0 +1,56 @@
+# 测试环境配置
+test_env:
+  base_url: "http://localhost:8000"
+  timeout: 30
+  retry_count: 3
+  
+# 数据库配置（如果需要）
+database:
+  host: "localhost"
+  port: 3306
+  username: "test"
+  password: "test123"
+  database: "medical_test"
+
+# 测试数据配置
+test_data:
+  # 有效的测试数据
+  valid_medicine:
+    name: "阿莫西林胶囊"
+    category: "抗生素"
+    specification: "250mg*24粒"
+    manufacturer: "华北制药"
+    price: 15.50
+    stock: 100
+    description: "用于敏感菌所致的各种感染"
+  
+  valid_patient:
+    patient_name: "张三"
+    gender: "男"
+    age: 35
+    phone: "13800138000"
+    id_card: "110101198801010001"
+    address: "北京市朝阳区"
+    medical_history: "高血压病史"
+  
+  valid_doctor:
+    doctor_name: "李医生"
+    gender: "女"
+    department: "内科"
+    title: "主治医师"
+    phone: "13900139000"
+    email: "doctor@example.com"
+    specialization: "心血管疾病"
+    years_of_experience: 10
+    status: "在职"
+
+# 测试报告配置
+report:
+  allure_results_dir: "./reports/allure-results"
+  html_report_path: "./reports/report.html"
+  
+# 日志配置
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file_path: "./logs/test.log"
