@@ -79,6 +79,9 @@ terminals/
 *.temp
 *.bak
 
+# Allure test reports
+stellar_autotest/reports/
+
 
 docs/*
 !docs/README.md

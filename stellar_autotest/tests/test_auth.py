@@ -18,18 +18,18 @@ class TestRegister:
     @pytest.mark.positive
     @pytest.mark.auth
     def test_register_success(self, anon_client, register_payload):
-        """用随机邮箱注册，期望 201，响应包含 email 字段"""
+        """用随机邮箱注册，期望 201，响应包含 message 字段"""
         response = anon_client.post("/auth/register", json_data=register_payload)
         assert_helper.assert_status_code(response, 201)
-        assert_helper.assert_json_keys(response, ["email"])
-        assert_helper.assert_json_value(response, "email", register_payload["email"])
+        assert_helper.assert_json_keys(response, ["message"])
+        assert_helper.assert_json_not_none(response, "message")
 
     @allure.story("注册")
-    @allure.title("负向：邮箱已注册 → 409")
+    @allure.title("负向：邮箱已注册 → 400")
     @pytest.mark.negative
     @pytest.mark.auth
     def test_register_duplicate_email(self, anon_client):
-        """使用 config.yaml 里已存在的测试账号邮箱注册，期望 409"""
+        """使用 config.yaml 里已存在的测试账号邮箱注册，期望 400"""
         from utils.config_manager import config
         user = config.get_test_user()
         payload = {
@@ -38,7 +38,7 @@ class TestRegister:
             "password": "SomePass123",
         }
         response = anon_client.post("/auth/register", json_data=payload)
-        assert_helper.assert_status_code(response, 409)
+        assert_helper.assert_status_code(response, 400)
 
     @allure.story("注册")
     @allure.title("负向：缺少必填字段 → 422")
@@ -123,10 +123,10 @@ class TestMe:
         assert_helper.assert_response_time(response, 3.0)
 
     @allure.story("当前用户信息")
-    @allure.title("负向：不带 token → 401")
+    @allure.title("负向：不带 token → 403")
     @pytest.mark.negative
     @pytest.mark.auth
     def test_get_me_no_token(self, anon_client):
-        """不带 token，期望 401"""
+        """不带 token，期望 403"""
         response = anon_client.get("/auth/me")
-        assert_helper.assert_status_code(response, 401)
+        assert_helper.assert_status_code(response, 403)

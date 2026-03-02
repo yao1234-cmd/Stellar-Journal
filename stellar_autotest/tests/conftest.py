@@ -136,7 +136,7 @@ def test_lifecycle(request):
 # pytest 标记与钩子
 # =============================================================================
 
-def pytest_configure(config_obj):
+def pytest_configure(config):
     """注册自定义标记，避免 --strict-markers 报 warning"""
     marks = [
         ("smoke",      "冒烟测试用例"),
@@ -149,7 +149,7 @@ def pytest_configure(config_obj):
         ("planet",     "星球模块"),
     ]
     for name, desc in marks:
-        config_obj.addinivalue_line("markers", f"{name}: {desc}")
+        config.addinivalue_line("markers", f"{name}: {desc}")
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
