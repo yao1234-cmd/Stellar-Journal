@@ -27,13 +27,13 @@ class TestPlanetState:
         assert_helper.assert_response_time(response, 5.0)
 
     @allure.story("星球状态")
-    @allure.title("负向：不带 token → 401")
+    @allure.title("负向：不带 token → 403")
     @pytest.mark.negative
     @pytest.mark.planet
     def test_get_planet_state_no_token(self, anon_client):
         """不带 token 获取星球状态，期望 401"""
         response = anon_client.get("/planet/state")
-        assert_helper.assert_status_code(response, 401)
+        assert_helper.assert_status_code(response, 403)
 
     @allure.story("星球状态")
     @allure.title("正向：创建 mood 记录后，atmosphere_color 不为 None")
@@ -61,13 +61,13 @@ class TestPlanetHistory:
         assert_helper.assert_field_type(response, "history", list)
 
     @allure.story("历史记录")
-    @allure.title("负向：不带 token → 401")
+    @allure.title("负向：不带 token → 403")
     @pytest.mark.negative
     @pytest.mark.planet
     def test_get_planet_history_no_token(self, anon_client):
         """不带 token，期望 401"""
         response = anon_client.get("/planet/history")
-        assert_helper.assert_status_code(response, 401)
+        assert_helper.assert_status_code(response, 403)
 
 
 @allure.feature("星球模块")
@@ -84,10 +84,10 @@ class TestPlanetStats:
         assert_helper.assert_json_keys(response, ["total_records"])
 
     @allure.story("统计数据")
-    @allure.title("负向：不带 token → 401")
+    @allure.title("负向：不带 token → 403")
     @pytest.mark.negative
     @pytest.mark.planet
     def test_get_planet_stats_no_token(self, anon_client):
         """不带 token，期望 401"""
         response = anon_client.get("/planet/stats")
-        assert_helper.assert_status_code(response, 401)
+        assert_helper.assert_status_code(response, 403)

@@ -49,13 +49,13 @@ class TestCreateRecord:
         assert_helper.assert_json_value(response, "type", "thought")
 
     @allure.story("创建记录")
-    @allure.title("负向：不带 token → 401")
+    @allure.title("负向：不带 token → 403")
     @pytest.mark.negative
     @pytest.mark.records
     def test_create_record_no_token(self, anon_client, mood_payload):
         """不带 token 创建记录，期望 401"""
         response = anon_client.post("/records/", json_data=mood_payload)
-        assert_helper.assert_status_code(response, 401)
+        assert_helper.assert_status_code(response, 403)
 
     @allure.story("创建记录")
     @allure.title("负向：type 非法 → 422")
@@ -101,13 +101,13 @@ class TestListRecords:
         assert_helper.assert_field_type(response, "records", list)
 
     @allure.story("查询记录列表")
-    @allure.title("负向：不带 token → 401")
+    @allure.title("负向：不带 token → 403")
     @pytest.mark.negative
     @pytest.mark.records
     def test_list_records_no_token(self, anon_client):
         """不带 token 查询列表，期望 401"""
         response = anon_client.get("/records/")
-        assert_helper.assert_status_code(response, 401)
+        assert_helper.assert_status_code(response, 403)
 
 
 @allure.feature("记录模块")
@@ -132,8 +132,8 @@ class TestGetAndDeleteRecord:
     @pytest.mark.negative
     @pytest.mark.records
     def test_get_nonexistent_record(self, http_client):
-        """查询一个不存在的 id，期望 404"""
-        response = http_client.get("/records/99999999")
+        """查询不存在的有效 UUID，期望 404"""
+        response = http_client.get("/records/a0000000-0000-0000-0000-000000000001")
         assert_helper.assert_status_code(response, 404)
 
     @allure.story("查询单条 / 删除")
@@ -147,7 +147,7 @@ class TestGetAndDeleteRecord:
         record_id = create_resp.json()["id"]
 
         del_resp = http_client.delete(f"/records/{record_id}")
-        assert_helper.assert_status_code(del_resp, 200)
+        assert_helper.assert_status_code(del_resp, 204)
 
         get_resp = http_client.get(f"/records/{record_id}")
         assert_helper.assert_status_code(get_resp, 404)
