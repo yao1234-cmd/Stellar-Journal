@@ -6,6 +6,7 @@
 import pytest
 import allure
 
+from utils import HTTPClient
 from utils.assertion_helper import assert_helper
 
 
@@ -17,7 +18,7 @@ class TestRegister:
     @pytest.mark.smoke
     @pytest.mark.positive
     @pytest.mark.auth
-    def test_register_success(self, anon_client, register_payload):
+    def test_register_success(self, anon_client: HTTPClient, register_payload):
         """用随机邮箱注册，期望 201，响应包含 message 字段"""
         response = anon_client.post("/auth/register", json_data=register_payload)
         assert_helper.assert_status_code(response, 201)
